@@ -28,8 +28,7 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
-
-    // Generate order number otomatis
+    
     public static function generateOrderNumber()
     {
         $prefix = 'INV-' . date('Ymd') . '-';
@@ -45,5 +44,74 @@ class Order extends Model
         }
         
         return $prefix . $newNumber;
+    }
+
+    public function getFormattedTotalPriceAttribute(): string
+    {
+        return 'Rp ' . number_format($this->total_price, 0, ',', '.');
+    }
+
+    public function getCustomerNameAttribute(): string
+    {
+        if (preg_match('/Nama:\s*([^\n\r]+)/', $this->shipping_address ?? '', $matches)) {
+            return trim($matches[1]);
+        }
+        return $this->user->name ?? 'Pelanggan';
+    }
+
+    public function getCustomerPhoneAttribute(): string
+    {
+        if (preg_match('/No\. HP\/WA:\s*([^\n\r]+)/', $this->shipping_address ?? '', $matches)) {
+            return trim($matches[1]);
+        }
+        return '-';
+    }
+
+    public function getShippingAddressOnlyAttribute(): string
+    {
+        if (preg_match('/Alamat:\s*([\s\S]+?)(?:\nCatatan:|$)/', $this->shipping_address ?? '', $matches)) {
+            return trim($matches[1]);
+        }
+        return $this->shipping_address ?? '-';
+    }
+
+    public function getNotesAttribute(): ?string
+    {
+        if (preg_match('/Catatan:\s*([\s\S]+)$/', $this->shipping_address ?? '', $matches)) {
+            return trim($matches[1]);
+        }
+        return null;
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return match($this->status) {
+            'pending' => 'Menunggu Konfirmasi',
+            'processing' => 'Sedang Diproses',
+            'completed' => 'Selesai',
+            'cancelled' => 'Dibatalkan',
+            default => ucfirst($this->status),
+        };
+    }
+
+    public function getPaymentStatusLabelAttribute(): string
+    {
+        return match($this->payment_status) {
+            'paid' => 'Lunas',
+            'pending' => 'Belum Lunas',
+            default => ucfirst($this->payment_status),
+        };
+    }
+
+    public function getPaymentMethodLabelAttribute(): string
+    {
+        return match($this->payment_method) {
+            'cod' => 'COD (Bayar di Tempat)',
+            'transfer' => 'Transfer Bank',
+            'qris' => 'QRIS / E-Wallet',
+            'cash' => 'Tunai',
+            'credit_card' => 'Kartu Kredit',
+            default => strtoupper($this->payment_method),
+        };
     }
 }

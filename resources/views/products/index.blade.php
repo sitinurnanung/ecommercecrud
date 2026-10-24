@@ -1,176 +1,78 @@
 @extends('layouts.app')
 
-@section('title', 'Home - E-Commerce')
+@section('title', 'Admin - Manajemen Produk')
 
 @section('content')
-<div class="hero-section">
-    <div class="container text-center">
-        <h1 class="display-4 fw-bold">Selamat Datang di E-Commerce</h1>
-        <p class="lead">Temukan produk berkualitas dengan harga terbaik</p>
-        
-        <!-- Search Bar -->
-        <form action="{{ route('home') }}" method="GET" class="mt-4">
-            <div class="row justify-content-center">
-                <div class="col-md-6">
-                    <div class="input-group">
-                        <input type="text" name="search" class="form-control form-control-lg" 
-                               placeholder="Cari produk..." value="{{ request('search') }}">
-                        <button class="btn btn-light btn-lg" type="submit">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="container">
-    <div class="row">
-        <!-- Sidebar Kategori -->
-        <div class="col-md-3">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h6 class="mb-0"><i class="fas fa-list"></i> Kategori</h6>
-                </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        <a href="{{ route('home') }}" class="list-group-item list-group-item-action 
-                            {{ !request('category') ? 'active' : '' }}">
-                            <i class="fas fa-th-large"></i> Semua Produk
-                        </a>
-                        @foreach($categories as $category)
-                        <a href="{{ route('home', ['category' => $category->id]) }}" 
-                           class="list-group-item list-group-item-action 
-                           {{ request('category') == $category->id ? 'active' : '' }}">
-                            {{ $category->icon }} {{ $category->name }}
-                            <span class="badge bg-secondary float-end">
-                                {{ $category->products->count() }}
-                            </span>
-                        </a>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-zinc-900 tracking-tight">Manajemen Produk</h1>
+            <p class="text-sm text-zinc-500 mt-1">Kelola data produk untuk katalog etalase toko.</p>
         </div>
+        <a href="{{ route('admin.products.create') }}" class="inline-flex items-center gap-2 bg-zinc-900 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-zinc-800 active:scale-[0.98] transition-all shadow-2xs">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            Tambah Produk
+        </a>
+    </div>
 
-        <!-- Produk -->
-        <div class="col-md-9">
-            <!-- Sorting -->
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <span class="text-muted">Menampilkan {{ $products->firstItem() }} - {{ $products->lastItem() }} 
-                    dari {{ $products->total() }} produk</span>
-                </div>
-                <div>
-                    <form action="{{ route('home') }}" method="GET" class="d-inline">
-                        @if(request('search'))
-                            <input type="hidden" name="search" value="{{ request('search') }}">
-                        @endif
-                        @if(request('category'))
-                            <input type="hidden" name="category" value="{{ request('category') }}">
-                        @endif
-                        <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()">
-                            <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Terbaru</option>
-                            <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Harga Terendah</option>
-                            <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Harga Tertinggi</option>
-                            <option value="rating" {{ request('sort') == 'rating' ? 'selected' : '' }}>Rating Tertinggi</option>
-                        </select>
-                    </form>
-                </div>
-            </div>
-
-            <div class="row">
-                @foreach($products as $product)
-                <div class="col-md-4 col-lg-4 mb-4">
-                    <div class="card product-card h-100">
-                        <a href="{{ route('products.show', $product) }}" class="text-decoration-none text-dark">
-                            <div class="card-img-top text-center bg-light" style="height: 200px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-image fa-5x text-secondary"></i>
-                            </div>
-                            <div class="card-body">
-                                <small class="text-muted">{{ $product->category->icon ?? '' }} {{ $product->category->name ?? 'Uncategorized' }}</small>
-                                <h5 class="card-title mt-1">{{ Str::limit($product->name, 30) }}</h5>
-                                
-                                <!-- Rating Stars -->
-                                <div class="mb-2">
-                                    @php
-                                        $avgRating = $product->average_rating;
-                                        $fullStars = floor($avgRating);
-                                        $halfStar = $avgRating - $fullStars >= 0.5 ? 1 : 0;
-                                        $emptyStars = 5 - $fullStars - $halfStar;
-                                    @endphp
-                                    @for($i = 1; $i <= $fullStars; $i++)
-                                        <i class="fas fa-star text-warning"></i>
-                                    @endfor
-                                    @if($halfStar)
-                                        <i class="fas fa-star-half-alt text-warning"></i>
-                                    @endif
-                                    @for($i = 1; $i <= $emptyStars; $i++)
-                                        <i class="far fa-star text-warning"></i>
-                                    @endfor
-                                    <span class="text-muted small">({{ $product->total_reviews }})</span>
+    <div class="bg-white rounded-2xl border border-zinc-200/80 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead class="bg-zinc-50/80 border-b border-zinc-200/80 text-zinc-600 font-medium">
+                    <tr>
+                        <th class="px-6 py-4">Produk</th>
+                        <th class="px-6 py-4">Harga</th>
+                        <th class="px-6 py-4">Stok</th>
+                        <th class="px-6 py-4 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-200/80 text-zinc-800">
+                    @forelse($products as $product)
+                    <tr class="hover:bg-zinc-50/50 transition-colors">
+                        <td class="px-6 py-4">
+                            <div>
+                                <p class="font-semibold text-zinc-900">{{ $product->name }}</p>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="inline-block text-[10px] font-semibold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-md">
+                                        {{ $product->category->name ?? 'Umum' }}
+                                    </span>
+                                    <span class="text-xs text-zinc-400 font-mono">Slug: {{ $product->slug }}</span>
                                 </div>
-                                
-                                <p class="card-text fw-bold text-primary">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
-                                @if($product->stock > 0)
-                                    <small class="text-success"><i class="fas fa-check-circle"></i> Tersedia</small>
-                                @else
-                                    <small class="text-danger"><i class="fas fa-times-circle"></i> Habis</small>
-                                @endif
                             </div>
-                        </a>
-                        <div class="card-footer bg-white border-0">
-                            @auth
-                            <button class="btn btn-primary w-100 add-to-cart" data-product-id="{{ $product->id }}">
-                                <i class="fas fa-shopping-cart"></i> Tambah ke Keranjang
-                            </button>
-                            @else
-                            <a href="{{ route('login') }}" class="btn btn-secondary w-100">
-                                <i class="fas fa-sign-in-alt"></i> Login untuk Beli
-                            </a>
-                            @endauth
-                        </div>
-                    </div>
-                </div>
-                @endforeach
-            </div>
-
-            <!-- Pagination -->
-            <div class="d-flex justify-content-center">
-                {{ $products->appends(request()->query())->links() }}
-            </div>
+                        </td>
+                        <td class="px-6 py-4 font-mono font-medium">
+                            Rp {{ number_format($product->price, 0, ',', '.') }}
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $product->stock > 10 ? 'bg-emerald-100 text-emerald-800' : ($product->stock > 0 ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800') }}">
+                                {{ $product->stock }} item
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <a href="{{ route('admin.products.edit', $product->slug) }}" class="p-2 text-zinc-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Edit">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                </a>
+                                <form action="{{ route('admin.products.destroy', $product->slug) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus produk ini?');" class="inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="p-2 text-zinc-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Hapus">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-sm text-zinc-500">
+                            Belum ada data produk. Silakan tambahkan produk baru.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
-
-@auth
-@push('scripts')
-<script>
-$(document).ready(function() {
-    $('.add-to-cart').click(function() {
-        let productId = $(this).data('product-id');
-        let button = $(this);
-        
-        $.ajax({
-            url: '/cart/add/' + productId,
-            method: 'POST',
-            data: {
-                _token: '{{ csrf_token() }}'
-            },
-            success: function(response) {
-                if(response.success) {
-                    $('#cartCount').text(response.cartCount);
-                    alert('Produk berhasil ditambahkan ke keranjang!');
-                }
-            },
-            error: function() {
-                alert('Terjadi kesalahan. Silakan coba lagi.');
-            }
-        });
-    });
-});
-</script>
-@endpush
-@endauth
 @endsection

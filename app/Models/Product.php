@@ -11,11 +11,12 @@ class Product extends Model
 
     protected $fillable = [
         'name',
+        'slug',
         'description',
         'price',
-        'image',
         'stock',
-        'category_id'
+        'image',
+        'category_id',
     ];
 
     public function category()
@@ -23,27 +24,22 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function reviews()
+    public function getRouteKeyName(): string
     {
-        return $this->hasMany(Review::class);
+        return 'slug';
     }
 
-    // Hitung rata-rata rating
-    public function getAverageRatingAttribute()
+    public function getImageUrlAttribute(): string
     {
-        return $this->reviews()->avg('rating') ?? 0;
-    }
+        if (empty($this->image)) {
+            return asset('images/products/default.jpg');
+        }
+        
+        $path = public_path($this->image);
+        if (file_exists($path)) {
+            return asset($this->image);
+        }
 
-    // Hitung total rating
-    public function getTotalReviewsAttribute()
-    {
-        return $this->reviews()->count();
-    }
-
-    // Hitung bintang (untuk display)
-    public function getStarsAttribute()
-    {
-        $avg = round($this->average_rating);
-        return str_repeat('⭐', $avg) . str_repeat('☆', 5 - $avg);
+        return asset('images/products/default.jpg');
     }
 }

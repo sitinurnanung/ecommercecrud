@@ -1,35 +1,69 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProductController;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Front\HomeController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
-use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController; // Ini sudah benar
 
-Route::get('/', [ProductController::class, 'index'])->name('home');
+/*
+|--------------------------------------------------------------------------
+| Web Routes - TechCatalog E-Commerce
+|--------------------------------------------------------------------------
+*/
 
+// =====================================================
+// 1. AUTENTIKASI
+// =====================================================
 Auth::routes();
 
-Route::middleware(['auth'])->group(function () {
-    // Cart routes
+// =====================================================
+// 2. PUBLIK (Bisa diakses tanpa login)
+// =====================================================
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/products/{product}', [HomeController::class, 'show'])->name('products.show');
+
+// =====================================================
+// 3. USER WAJIB LOGIN (Cart, Checkout, Riwayat)
+// =====================================================
+Route::middleware('auth')->group(function () {
+
+    // Keranjang Belanja
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-    Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.add');
-    Route::patch('/cart/update/{cart}', [CartController::class, 'update'])->name('cart.update');
-    Route::delete('/cart/remove/{cart}', [CartController::class, 'remove'])->name('cart.remove');
-    
-    // Order routes
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-    Route::post('/checkout', [OrderController::class, 'store'])->name('checkout');
-    Route::post('/orders/{order}/confirm-payment', [OrderController::class, 'confirmPayment'])->name('orders.confirm-payment');
-    Route::post('/orders/{order}/confirm-cod', [OrderController::class, 'confirmCOD'])->name('orders.confirm-cod');
-    Route::post('/orders/{order}/cancel', [OrderController::class, 'cancelOrder'])->name('orders.cancel');
-    
-    // Review routes
-    Route::post('/products/{product}/review', [ReviewController::class, 'store'])->name('review.store');
+    Route::post('/cart/{product}', [CartController::class, 'add'])->name('cart.add');
+    Route::patch('/cart/{cart}', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('/cart/{cart}', [CartController::class, 'remove'])->name('cart.remove');
+
+    // Checkout
+    Route::get('/checkout', [CartController::class, 'checkoutPage'])->name('checkout.index');
+    Route::post('/checkout', [CartController::class, 'processCheckout'])->name('checkout.process');
+
+    // Pembelian Instan & Nota
+    Route::post('/products/{product}/buy', [OrderController::class, 'directBuy'])->name('orders.direct');
+    Route::get('/orders/{order_number}/receipt', [OrderController::class, 'receipt'])->name('orders.receipt');
+
+    // Riwayat Pesanan Saya
+    Route::get('/my-orders', [OrderController::class, 'index'])->name('orders.index');
+
+    // Batalkan Pesanan
+    Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancelOrder'])->name('orders.cancel');
 });
 
-// Product detail (bisa diakses tanpa login)
-Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+// =====================================================
+// 4. ADMIN PANEL (Wajib Login + Role Admin)
+// =====================================================
+Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
+    
+    // Dashboard
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Produk (CRUD) - HANYA GUNAKAN INI
+    Route::resource('products', AdminProductController::class);
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+    // Pesanan
+    Route::get('orders', [OrderController::class, 'adminIndex'])->name('orders.index');
+    Route::patch('orders/{order}/status', [OrderController::class, 'adminUpdateStatus'])->name('orders.updateStatus');
+
+}); // <-- Tutup group admin di sini
